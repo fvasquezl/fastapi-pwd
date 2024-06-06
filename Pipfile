@@ -8,6 +8,8 @@ fastapi = "*"
 pyjwt = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
 pydantic-settings = "*"
+sqlalchemy = "*"
+pytz = "*"
 
 [dev-packages]
 
