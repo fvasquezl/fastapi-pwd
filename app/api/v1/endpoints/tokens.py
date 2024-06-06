@@ -1,18 +1,17 @@
-from contextvars import Token
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.api.schemas.token import create_access_token
+from app.api.schemas.token import Token, create_access_token
 from app.api.schemas.user import authenticate_user
 
 from app.core.config import settings
 from app.core.db import fake_users_db
 
 
-router = FastAPI()
+router = APIRouter()
 
 
 @router.post("/token")

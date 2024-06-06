@@ -1,9 +1,8 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI
-from schemas.user import User, get_current_active_user
+from fastapi import APIRouter, Depends
+from app.api.schemas.user import User, get_current_active_user
 
-
-router = FastAPI()
+router = APIRouter()
 
 
 @router.get("/users/me/", response_model=User)
