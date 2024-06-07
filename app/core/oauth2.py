@@ -14,7 +14,7 @@ import pytz
 
 # crear clase que devuelva el la zona horaria
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/token")
 
 
 def authenticate_user(db, username: str, password: str):

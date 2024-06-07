@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 # Rutas para usuarios
-@router.post("/users/", response_model=User)
+@router.post("/", response_model=User)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.email == user.email).first()
     if db_user:
@@ -23,7 +23,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.get("/users/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.id == user_id).first()
     if db_user is None:
@@ -31,7 +31,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.get("/users/me/", response_model=User)
+@router.get("/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
