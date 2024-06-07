@@ -52,10 +52,12 @@ async def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
+
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
+        print(token_data)
     except jwt.InvalidTokenError:
         raise credentials_exception
     db_user = db.query(DBUser).filter(DBUser.username == token_data.username).first()

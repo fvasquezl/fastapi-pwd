@@ -46,3 +46,19 @@ async def login_for_access_token(
     db.refresh(db_token)
 
     return Token(access_token=access_token, token_type="bearer")
+
+
+# @router.post("/refresh")
+# def refresh_token(refresh_token: str = Depends(oauth2_scheme)):
+#     # ... lógica para validar el token de refresco y generar un nuevo token de acceso ...
+
+
+# @router.post("/revoke")
+# def revoke_token(token: str = Depends(oauth2_scheme)):
+#     # ... lógica para invalidar el token ...
+
+
+# @router.post("/refresh")
+# def refresh_token(refresh_token: str = Depends(refresh_token_scheme)):
+#     # ... lógica para validar el token de refresco y generar un nuevo token de acceso ...
+#     # ... devuelve el nuevo token de acceso ...
