@@ -16,6 +16,7 @@ class DBToken(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     access_token: Mapped[str] = mapped_column(String, unique=True, index=True)
+    refresh_token: Mapped[str] = mapped_column(String, unique=True, index=True)
     token_type: Mapped[str] = mapped_column(String)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))

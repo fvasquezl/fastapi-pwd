@@ -32,12 +32,29 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.now(pytz.timezone(settings.TIMEZONE)) + expires_delta
     else:
-        expire = datetime.now(pytz.timezone(settings.TIMEZONE)) + timedelta(minutes=15)
+        expire = datetime.now(pytz.timezone(settings.TIMEZONE)) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
 
+    return encoded_jwt
+
+
+def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(pytz.timezone(settings.TIMEZONE)) + expires_delta
+    else:
+        expire = datetime.now(pytz.timezone(settings.TIMEZONE)) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return encoded_jwt
 
 
@@ -77,22 +94,34 @@ async def get_current_active_user(
 
 def create_db_token(form_data, db):
     db_user = authenticate_user(db, form_data.username, form_data.password)
-
-    if not db_user:
+    # Validamos que el usuario exista
+    if not db_user or not Hasher.verify_password(
+        form_data.password, db_user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Obtenemos el token del usuario
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    expires_at = datetime.now(pytz.timezone("America/Tijuana")) + access_token_expires
-    existing_token = db.query(DBToken).filter(DBToken.user_id == db_user.id).first()
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expires_at = datetime.now(pytz.timezone(settings.TIMEZONE)) + access_token_expires
+
     access_token = create_access_token(
         data={"sub": db_user.username}, expires_delta=access_token_expires
     )
+    refresh_token = create_refresh_token(
+        data={"sub": db_user.username}, expires_delta=refresh_token_expires
+    )
 
+    existing_token = db.query(DBToken).filter(DBToken.user_id == db_user.id).first()
+
+    # Actualiza el token si ya existe
     if existing_token:
         existing_token.access_token = access_token
+        existing_token.refresh_token = refresh_token
         existing_token.expires_at = expires_at
         db.commit()
         db.refresh(existing_token)
@@ -101,6 +130,7 @@ def create_db_token(form_data, db):
         # Guarda el token en la base de datos
         db_token = DBToken(
             access_token=access_token,
+            refresh_token=refresh_token,
             token_type="bearer",
             user_id=db_user.id,
             expires_at=expires_at,
@@ -110,3 +140,49 @@ def create_db_token(form_data, db):
         db.refresh(db_token)
 
         return db_token
+
+
+def refresh_db_token(refresh_token, db):
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(
+            refresh_token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except jwt.InvalidTokenError:
+        raise credentials_exception
+    db_user = db.query(DBUser).filter(DBUser.username == token_data.username).first()
+    if db_user is None:
+        raise credentials_exception
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": db_user.username}, expires_delta=access_token_expires
+    )
+    expires_at = datetime.now(pytz.timezone(settings.TIMEZONE)) + access_token_expires
+    db_token = db.query(DBToken).filter(DBToken.user_id == db_user.id).first()
+    if db_token:
+        db_token.access_token = access_token
+        db_token.expires_at = expires_at
+        db.commit()
+        db.refresh(db_token)
+    else:
+        refresh_token = create_refresh_token(data={"sub": db_user.username})
+        db_token = DBToken(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            user_id=db_user.id,
+            expires_at=expires_at,
+        )
+        db.add(db_token)
+        db.commit()
+        db.refresh(db_token)
+    return db_token

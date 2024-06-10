@@ -14,8 +14,10 @@ class Settings(BaseSettings):
 
     # Configuración de seguridad
     SECRET_KEY: str  # openssl rand -hex 32
+    REFRESH_SECRET_KEY: str  # openssl rand -hex 32
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 2
 
     # Timezone
     TIMEZONE: str = "America/Tijuana"
