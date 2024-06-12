@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from app.core.hashing import Hasher
 
 
 class UserBase(BaseModel):
-    username: str
-    email: str | None = None
+    username: str = Field(min_length=5, default="username")
+    email: EmailStr | None = Field(default=None)
 
 
 class UserCreate(UserBase):
