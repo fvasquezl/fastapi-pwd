@@ -1,18 +1,17 @@
+from datetime import datetime
 import re
 from typing import Optional
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, computed_field
 
 
 class PostBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
     content: str = Field(..., min_length=10)
-    slug: Optional[str]
 
-    @field_validator("title", mode="before")
-    def generate_slug(cls, v: str, info: ValidationInfo) -> str:
-        if v:
-            return cls.slugify(v)
-        return None
+    @computed_field
+    @property
+    def slug(self) -> str:
+        return self.slugify(self.title)
 
     @staticmethod
     def slugify(text: str) -> str:
@@ -30,13 +29,13 @@ class PostCreate(PostBase):
 class PostUpdate(PostBase):
     title: Optional[str] = Field(None, min_length=3, max_length=100)
     content: Optional[str] = Field(None, min_length=10)
-    slug: Optional[str] = Field(None, min_length=3, max_length=100)
 
 
 class Post(PostBase):
     id: int
     user_id: int
-    slug: str = Field(..., min_length=3, max_length=1000)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

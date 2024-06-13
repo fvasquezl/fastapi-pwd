@@ -9,7 +9,7 @@ class TokenBase(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Union[str, None] = None
+    username: str | None = None
 
 
 class TokenRefresh(BaseModel):
