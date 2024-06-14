@@ -1,14 +1,21 @@
 from typing import List, Optional
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.api.v1.models.category import DBCategory
 from sqlalchemy.orm import Session
-from slugify import slugify
 
 
 class CategoryBase(BaseModel):
     name: str
+
+    @field_validator("name")
+    def name_must_be_unique(cls, v, values, **kwargs):
+        db: Session = kwargs.get("db")
+        if db:
+            if db.query(DBCategory).filter(DBCategory.name == v).first():
+                raise ValueError("Category name already exists.")
+        return v
 
 
 class CategoryCreate(CategoryBase):
@@ -34,9 +41,9 @@ def all_db_categories(skip, limit: int, db: Session) -> List[DBCategory]:
 
 def create_db_category(category: CategoryCreate, db: Session) -> DBCategory:
     try:
-        slug = slugify(category.name)
+        # slug = slugify(category.name)
         db_category = DBCategory(**category.model_dump(exclude_none=True))
-        db_category.slug = slug
+        # db_category.slug = slug
         db.add(db_category)
         db.commit()
         db.refresh(db_category)

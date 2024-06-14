@@ -1,8 +1,8 @@
 from typing import List
 from sqlalchemy import Integer, String
+from app.api.v1.models.post import DBPost
 from app.core.database import Base
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.api.v1.models.post import DBPost
 
 
 class DBCategory(Base):
