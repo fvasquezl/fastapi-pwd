@@ -9,9 +9,6 @@ from app.core.oauth2 import get_current_user
 router = APIRouter()
 
 
-# Rutas para contraseñas
-
-
 @router.post("/", response_model=Post)
 def create_post(
     post: PostCreate,
@@ -32,3 +29,12 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     return db_post
+
+
+# Get all post from user
+@router.get("/{user_id}/posts", response_model=list[Post])
+def read_post(user_id: int, db: Session = Depends(get_db)):
+    db_posts = db.query(DBPost).filter(DBPost.user_id == user_id).all()
+    if not db_posts:
+        raise HTTPException(status_code=404, detail="Post not found for this user")
+    return db_posts

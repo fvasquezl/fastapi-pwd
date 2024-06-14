@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.core.database import Base
+from app.core.database import TimeStampedModel
 
 # import app.api.v1.models.post_tags
 
@@ -17,7 +17,7 @@ else:
     DBTag = "DBTag"
 
 
-class DBPost(Base):
+class DBPost(TimeStampedModel):
     __tablename__ = "posts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

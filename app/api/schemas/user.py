@@ -26,3 +26,15 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+        # Desactiva la validación de campos requeridos
+        arbitrary_types_allowed = True
+
+        # Define el constructor para asignar los valores correctamente
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self.id = data.get("id")
+        self.is_disabled = data.get("is_disabled")
+        self.created_at = data.get("created_at")
+        self.updated_at = data.get("updated_at")
